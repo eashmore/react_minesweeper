@@ -1,6 +1,6 @@
 var Tile = React.createClass({
   handleClick: function(event) {
-    var flag = event.altKey ? true : false;
+    var flag = event.shiftKey ? true : false;
     this.props.updateGame(this.props.pos, flag);
   },
 
@@ -12,12 +12,14 @@ var Tile = React.createClass({
     if (tile.flagged) {
       klass = "flagged";
       content = "\u2691";
-    } else if (tile.bombed) {
-      klass = "bombed";
-      content = "\u2622";
     } else if (tile.explored){
-      klass = "explored";
-      content = tile.adjacentBombCount();
+      if (tile.bombed) {
+        klass = "bombed";
+        content = "\u2622";
+      } else {
+        klass = "explored";
+        content = tile.adjacentBombCount();
+      }
     }
     klass = "tile " + klass;
     return (
@@ -84,6 +86,8 @@ var Game = React.createClass({
     return (
       <div>
         {gameOver}
+        Click a tile to reveal it <br/>
+        Shift + Click a tile to flag it
         <Board board={ this.state.board } updateGame={ this.updateGame }/>
       </div>
     );

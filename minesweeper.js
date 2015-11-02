@@ -23,9 +23,13 @@
   Tile.prototype.explore = function() {
     this.explored = true;
 
+    if (this.bombed){
+      return;
+    }
+
     if (this.adjacentBombCount() === "") {
       this.neighbors().forEach(function(neighbor) {
-        if (!neighbor.explored && !neighbor.bombed) {
+        if (!neighbor.explored) {
           neighbor.explore();
         }
       });
