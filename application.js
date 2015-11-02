@@ -1,6 +1,6 @@
 var Tile = React.createClass({
   handleClick: function(event) {
-    var flag = event.shiftKey ? true : false;
+    var flag = event.altKey ? true : false;
     this.props.updateGame(this.props.pos, flag);
   },
 
@@ -74,20 +74,36 @@ var Game = React.createClass({
     this.setState({ win: won, lose: lose });
   },
 
-  render: function() {
-    var gameOver;
+  restartGame: function() {
+    var board = new window.Minesweeper.Board([9, 9], 10);
+    this.setState({ board: board, win: false, lose: false });
+  },
 
-    if (this.state.won) {
-      gameOver = "You Won!";
+  render: function() {
+    var gameState = null;
+    if (this.state.win) {
+      gameState = "You Won!";
     } else if (this.state.lose) {
-      gameOver = "You Lose!";
+      gameState = "You Lose!";
+    }
+
+    var gameOver = "";
+
+    if (gameState) {
+      gameOver =
+        <div className="model">
+          <div className="model-content">
+            <p>{gameState}</p><br/>
+            <button onClick={this.restartGame}>Restart Game</button>
+          </div>
+        </div>;
     }
 
     return (
       <div>
         {gameOver}
         Click a tile to reveal it <br/>
-        Shift + Click a tile to flag it
+        Alt + Click a tile to flag it
         <Board board={ this.state.board } updateGame={ this.updateGame }/>
       </div>
     );
