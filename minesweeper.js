@@ -1,11 +1,11 @@
 (function() {
   "use strict";
 
-  if (typeof window.Minesweeper === "undefined") {
+  if (typeof window.Minesweeper === 'undefined') {
     window.Minesweeper = {};
   }
 
-  var Tile = Minesweeper.prototype.Tile = function(board, position) {
+  var Tile = window.Minesweeper.Tile = function(board, position) {
     this.board = board;
     this.position = position;
     this.bombed = false;
@@ -21,39 +21,50 @@
   };
 
   Tile.prototype.explore = function() {
-    this.checkNeighbors();
     this.explored = true;
 
-    if (this.bombed) {
-      this.board.lose();
+    if (this.adjacentBombCount() === "") {
+      this.neighbors().forEach(function(neighbor) {
+        if (!neighbor.explored && !neighbor.bombed) {
+          neighbor.explore();
+        }
+      });
     }
   };
 
   Tile.prototype.toggleFlag = function() {
-    this.flagged = true;
+    if (this.flagged) {
+      this.flagged = false;
+    } else {
+      this.flagged = true;
+    }
   };
 
   Tile.prototype.neighbors = function() {
     var neighbors = [];
 
-    Tile.DELTAS.forEach(function(detla) {
+    Tile.DELTAS.forEach(function(delta) {
       var row = this.position[0] + delta[0];
       var col = this.position[1] + delta[1];
-      if (row >= 0 && col >= 0) {
+
+      var maxRow = this.board.gridSize[0];
+      var maxCol = this.board.gridSize[1];
+
+      if ((row >= 0 && row < maxRow) && (col >= 0 && col < maxCol)) {
         neighbors.push([row, col]);
       }
-    });
+    }.bind(this));
 
-    neighbors.map(function(neighbor) {
-      return this.board[neighbor[0]][neighbor[1]];
-    });
+    neighbors = neighbors.map(function(neighbor) {
+      return this.board.grid[neighbor[0]][neighbor[1]];
+    }.bind(this));
 
     return neighbors;
   };
 
   Tile.prototype.adjacentBombCount = function() {
     var bombCount = 0;
-    var neighbors = this.getNeighbors();
+    var neighbors = this.neighbors();
 
     neighbors.forEach(function(neighbor) {
       if (neighbor.bombed) {
@@ -61,10 +72,13 @@
       }
     });
 
+    if (bombCount === 0) {
+      bombCount = "";
+    }
     return bombCount;
   };
 
-  var Board = Minesweeper.prototype.Board = function (gridSize, numBombs) {
+  var Board = window.Minesweeper.Board = function (gridSize, numBombs) {
     this.gridSize = gridSize;
     this.numBombs = numBombs;
     this.grid = [];
@@ -77,7 +91,7 @@
     for (var i = 0; i < this.gridSize[0]; i++) {
       this.grid.push([]);
       for (var j = 0; j < this.gridSize[1]; j++) {
-        var tile = Minesweeper.Tile(this, [i, j]);
+        var tile = new Tile(this, [i, j]);
         this.grid[i].push(tile);
       }
     }
@@ -93,7 +107,15 @@
   };
 
   Board.prototype.lose = function(){
-    return true;
+    var lost = false;
+    this.grid.forEach(function(row) {
+      row.forEach(function(tile) {
+        if (tile.bombed && tile.explored) {
+          lost = true;
+        }
+      });
+    });
+    return lost;
   };
 
   Board.prototype.win = function() {
